@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <h2>Admin Dashboard - Contact Messages</h2>
+  <main class="container">
+    <table id="messagesTable">
+        <thead>
+        <tr>
+            <th>ID</th><th>Name</th><th>Email</th><th>Message</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+  </main>
+  
+
+  <script>
+    const API_BASE_URL = "http://localhost:8080/api";
+    const token = localStorage.getItem("token");
+
+    async function loadMessages() {
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE_URL}/messages`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (res.status === 403 || res.status === 401) {
+            alert('Session expired or unauthorized. Please log in.');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const data = await res.json();
+        const tbody = document.querySelector("#messagesTable tbody");
+        tbody.innerHTML = "";
+        data.forEach(msg => {
+          tbody.innerHTML += `<tr>
+            <td>${msg.id}</td><td>${msg.name}</td><td>${msg.email}</td><td>${msg.message}</td>
+          </tr>`;
+        });
+      } catch (error) {
+        console.error("Failed to load messages:", error);
+      }
+    }
+
+    window.onload = loadMessages;
+  </script>
+</body>
+</html>
+

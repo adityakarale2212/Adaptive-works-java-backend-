@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Dashboard - Adaptive Works</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <style>
+        /* Notification style */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            background-color: #2ecc71;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(120%);
+            transition: transform 0.5s ease-in-out;
+            z-index: 1001;
+        }
+        .notification.error {
+            background-color: #e74c3c;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification element -->
+    <div id="notification" class="notification"></div>
+
+    <header>
+        <h1>Employee Dashboard</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Profile Section -->
+        <section class="card">
+            <h2>My Profile</h2>
+            <form id="profileForm">
+                <label for="skills">Skills (e.g., java, python, marketing):</label>
+                <input type="text" id="skills" placeholder="Enter your skills">
+
+                <label for="experience">Experience:</label>
+                <input type="text" id="experience" placeholder="e.g., 5 years in software development">
+
+                <label for="education">Education (e.g., computer science, business):</label>
+                <input type="text" id="education" placeholder="e.g., B.S. in Computer Science">
+
+                <label for="bio">Bio:</label>
+                <textarea id="bio" placeholder="Tell us a bit about yourself"></textarea>
+
+                <label for="resumeLink">Resume Link (optional):</label>
+                <input type="url" id="resumeLink" placeholder="https://linkedin.com/in/yourprofile">
+
+                <button type="submit">Save Profile</button>
+            </form>
+        </section>
+
+        <!-- Career Suggestions Section -->
+        <section class="card">
+            <h2>Career Suggestions (AI)</h2>
+            <p>Based on your profile, we suggest exploring:</p>
+            <ul id="suggestionsList">
+                <li>Loading suggestions...</li>
+            </ul>
+        </section>
+        
+        <!-- Jobs Section -->
+        <section class="card">
+            <h2>Available Jobs</h2>
+            <div id="jobsList"></div>
+        </section>
+
+        <!-- Applications Section -->
+        <section class="card">
+            <h2>My Applications</h2>
+            <div id="myApplications"></div>
+        </section>
+    </main>
+
+    <script>
+        const token = localStorage.getItem("token");
+        const API_BASE_URL = "http://localhost:8080/api";
+
+        // Check for token on load
+        if (!token) {
+            window.location.href = "login.html";
+        }
+
+        // --- Notification Function ---
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById("notification");
+            notification.textContent = message;
+            notification.className = "notification show";
+            if (isError) {
+                notification.classList.add("error");
+            }
+            setTimeout(() => {
+                notification.className = "notification";
+            }, 3000);
+        }
+
+        // --- Logout Function ---
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "index.html";
+        }
+
+        // --- NEW: Load Profile ---
+        async function loadProfile() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/employee/profile`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Could not load profile");
+                
+                const profile = await res.json();
+                
+                // Populate the form fields with data
+                if (profile) {
+                    document.getElementById("skills").value = profile.skills || '';
+                    document.getElementById("experience").value = profile.experience || '';
+                    document.getElementById("education").value = profile.education || '';
+                    document.getElementById("bio").value = profile.bio || '';
+                    document.getElementById("resumeLink").value = profile.resumeLink || '';
+                }
+            } catch (error) {
+                console.error(error);
+                showNotification("Could not load your profile data.", true);
+            }
+        }
+
+        // --- NEW: Save Profile ---
+        document.getElementById("profileForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            // Get data from form
+            const profileData = {
+                skills: document.getElementById("skills").value,
+                experience: document.getElementById("experience").value,
+                education: document.getElementById("education").value,
+                bio: document.getElementById("bio").value,
+                resumeLink: document.getElementById("resumeLink").value
+            };
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/employee/profile`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(profileData)
+                });
+
+                if (!res.ok) throw new Error("Server responded with an error");
+
+                const savedProfile = await res.json();
+                showNotification("Profile saved successfully!");
+                
+                // After saving, reload suggestions to get new ones
+                loadSuggestions();
+
+            } catch (error) {
+                console.error(error);
+                showNotification("Failed to save profile.", true);
+            }
+        });
+
+        // --- Load Jobs ---
+        async function loadJobs() {
+            const jobsList = document.getElementById("jobsList");
+            try {
+                const res = await fetch(`${API_BASE_URL}/jobs`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Failed to fetch jobs");
+                
+                const jobs = await res.json();
+                
+                if (jobs.length === 0) {
+                    jobsList.innerHTML = "<p>No jobs posted yet.</p>";
+                    return;
+                }
+
+                jobsList.innerHTML = ""; // Clear list
+                jobs.forEach(job => {
+                    const jobEl = document.createElement("div");
+                    jobEl.className = "job-item";
+                    jobEl.innerHTML = `
+                        <h3>${job.title}</h3>
+                        <p><strong>Location:</strong> ${job.location}</p>
+                        <p>${job.description}</p>
+                        <button onclick="applyToJob(${job.id})">Apply Now</button>
+                    `;
+                    jobsList.appendChild(jobEl);
+                });
+            } catch (error) {
+                console.error(error);
+                jobsList.innerHTML = "<p>Could not load jobs.</p>";
+            }
+        }
+
+        // --- Apply to Job ---
+        async function applyToJob(jobId) {
+            // This is a placeholder. In a real app, you'd save this to the 'job_applications' table.
+            console.log(`Applying to job ${jobId}`);
+            showNotification(`Applied to job ${jobId}! (Simulation)`);
+            // To implement fully, you would POST to an endpoint like /api/employee/apply/${jobId}
+        }
+
+        // --- Load Applications ---
+        async function loadApplications() {
+            // Placeholder: This would fetch from /api/employee/applications
+            document.getElementById("myApplications").innerHTML = "<p>You have not applied to any jobs yet.</p>";
+        }
+
+        // --- Load Career Suggestions ---
+        async function loadSuggestions() {
+            const list = document.getElementById("suggestionsList");
+            try {
+                const res = await fetch(`${API_BASE_URL}/employee/suggestions`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Could not load suggestions");
+
+                const suggestions = await res.json();
+                list.innerHTML = ""; // Clear list
+
+                if (suggestions.length === 0) {
+                    list.innerHTML = "<li>No suggestions found. Keep updating your profile!</li>";
+                } else {
+                    suggestions.forEach(s => {
+                        const li = document.createElement("li");
+                        li.textContent = s;
+                        list.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error(error);
+                list.innerHTML = "<li>Could not load suggestions.</li>";
+            }
+        }
+
+        // --- Initial Page Load ---
+        window.onload = () => {
+            loadProfile();
+            loadJobs();
+            loadApplications();
+            loadSuggestions();
+        };
+    </script>
+</body>
+</html>

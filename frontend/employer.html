@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employer Dashboard - Adaptive Works</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <header class="dashboard-header">
+    <h1>Employer Dashboard</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="#" onclick="logout()">Logout</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Post a New Job</h2>
+      <form id="jobForm">
+        <label for="title">Job Title:</label>
+        <input type="text" id="title" required>
+
+        <label for="description">Description:</label>
+        <textarea id="description" required></textarea>
+
+        <label for="location">Location:</label>
+        <input type="text" id="location" required>
+
+        <button type="submit">Post Job</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>My Posted Jobs</h2>
+      <div id="jobsList"></div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:8080';
+    const token = localStorage.getItem("token");
+
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    }
+
+    if (!token) {
+      window.location.href = "login.html";
+    }
+
+    async function loadPostedJobs() {
+      const response = await fetch(`${API_BASE_URL}/api/jobs/my-jobs`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const jobs = await response.json();
+      const jobsList = document.getElementById("jobsList");
+      jobsList.innerHTML = "";
+
+      if (jobs.length === 0) {
+        jobsList.innerHTML = "<p>You have not posted any jobs yet.</p>";
+      } else {
+        jobs.forEach(job => {
+          const jobElement = document.createElement("div");
+          jobElement.className = "job-item";
+          jobElement.innerHTML = `
+            <h3>${job.title}</h3>
+            <p>${job.location}</p>
+            <p>${job.description}</p>
+          `;
+          jobsList.appendChild(jobElement);
+        });
+      }
+    }
+
+    document.getElementById("jobForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("title").value;
+      const description = document.getElementById("description").value;
+      const location = document.getElementById("location").value;
+
+      const res = await fetch(`${API_BASE_URL}/api/jobs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, description, location })
+      });
+
+      if (res.ok) {
+        alert("✅ Job posted successfully!");
+        document.getElementById("jobForm").reset();
+        loadPostedJobs();
+      } else {
+        const data = await res.json();
+        alert("❌ " + (data.error || "Failed to post job"));
+      }
+    });
+
+    window.onload = loadPostedJobs;
+  </script>
+</body>
+</html>
+

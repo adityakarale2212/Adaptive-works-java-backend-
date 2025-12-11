@@ -1,0 +1,173 @@
+/* Dashboard Layout */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f7fc;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 30px auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 30px;
+}
+
+/* Header */
+h2, header h1 {
+  text-align: center;
+  color: #34495e;
+  padding: 20px;
+  margin: 0 0 30px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+header {
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+  padding: 0;
+}
+header h1 {
+    margin: 0;
+    padding: 20px;
+}
+header nav {
+  display: flex;
+  justify-content: center;
+  background: #f8f9fa;
+  padding: 10px;
+  border-top: 1px solid #e9ecef;
+}
+header nav a {
+  color: #3498db;
+  margin: 0 20px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+header nav a:hover {
+    color: #2980b9;
+}
+
+/* Card layout for sections */
+.card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+  border-top: 4px solid #3498db;
+}
+.card h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+/* Forms */
+form {
+  display: flex;
+  flex-direction: column;
+}
+label {
+  font-weight: 600;
+  margin: 10px 0 5px;
+  color: #555;
+}
+input, textarea, select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #dfe6e9;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 15px;
+}
+input:focus, textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+button {
+  background-image: linear-gradient(to right, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+  font-size: 15px;
+}
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(41, 128, 185, 0.3);
+}
+
+/* Job & Applicant lists */
+.job {
+  border: 1px solid #eee;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+.job h4 { margin-top: 0; color: #2c3e50; }
+.job small { color: #7f8c8d; }
+.job button {
+    margin-top: 10px;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.applicants {
+  margin-top: 15px;
+  padding: 10px;
+  display: none;
+  background: #eaf5ff;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+}
+.applicants ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.applicants li {
+    padding: 5px 0;
+}
+
+/* Admin Table */
+.container table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+th, td {
+  border-bottom: 1px solid #ddd;
+  padding: 15px;
+  text-align: left;
+}
+thead {
+  background: #34495e;
+  color: white;
+}
+tbody tr:nth-child(even) {
+  background: #f8f9fa;
+}
+tbody tr:hover {
+    background: #eaf5ff;
+}
+
